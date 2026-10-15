@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>탈출 속도 에너지 발사대</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+html,body{margin:0}
+:root{
+  --bg:#F4F6F9; --panel:#FFFFFF; --ink:#18202C; --muted:#5E6878; --line:#D5DAE3; --soft:#EEF1F6;
+  --ek:#1F9D55; --ep:#D1541B; --e:#2563D9; --planet:#8BA3C7; --grid:#E6E9EF; --accent:#0E7C66; --hit:#C2186B; --flame:#E8A21A; --space:#E9EEF6;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151C; --panel:#1A2029; --ink:#E7EBF1; --muted:#9AA4B3; --line:#2E3643; --soft:#222A35;
+    --ek:#2E9E68; --ep:#D46F38; --e:#5A88E6; --planet:#4B6187; --grid:#252C37; --accent:#3CC4A2; --hit:#F06BAA; --flame:#F2B84B; --space:#141A24;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151C; --panel:#1A2029; --ink:#E7EBF1; --muted:#9AA4B3; --line:#2E3643; --soft:#222A35;
+  --ek:#2E9E68; --ep:#D46F38; --e:#5A88E6; --planet:#4B6187; --grid:#252C37; --accent:#3CC4A2; --hit:#F06BAA; --flame:#F2B84B; --space:#141A24;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;font-size:15px;line-height:1.65;padding:24px 16px 48px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header h1{font-size:1.5rem;margin:0;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:74ch}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.label{font-size:.75rem;letter-spacing:.06em;color:var(--muted);font-weight:700;margin-bottom:8px}
+canvas{display:block;width:100%}
+#main{aspect-ratio:900/520}
+#tg{aspect-ratio:900/210}
+.ctrl{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:start}
+@media (max-width:760px){.ctrl{grid-template-columns:1fr}}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#launch{background:var(--hit);border-color:var(--hit);color:#fff;font-weight:700;padding:8px 22px}
+#launch:disabled{opacity:.45;cursor:default}
+button.pre.on{border-color:var(--e);color:var(--e);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--e)}
+.elabel{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem;color:var(--muted)}
+.elabel b{font-size:1.3rem;color:var(--e)}
+.launchinfo{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;font-size:.92rem;margin:0}
+.launchinfo dt{color:var(--muted)} .launchinfo dd{margin:0}
+#status{font-size:.95rem;padding:10px 12px;border-radius:8px;background:var(--soft);min-height:3em}
+#status b{color:var(--hit)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.86rem;color:var(--muted)}
+.sw{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:3px;margin-right:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.f{font-family:"Times New Roman",serif;font-style:italic;font-size:1.08em}
+.f .n{font-style:normal}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .15em;line-height:1.15}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 .2em}
+.eqbox{background:var(--soft);border-radius:8px;padding:10px 14px;margin:6px 0 10px;overflow-x:auto;white-space:nowrap;font-size:1.04rem}
+.sol h3{font-size:1rem;margin:12px 0 4px}
+.sol h3:first-child{margin-top:0}
+.sol p{margin:0 0 6px}
+.cases{border-collapse:collapse;width:100%;font-size:.9rem}
+.cases th,.cases td{padding:7px 8px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.cases th{color:var(--muted);font-weight:700;border-top:none;font-size:.8rem}
+.tw{overflow-x:auto}
+.mis li{margin-bottom:6px}
+.mis b{color:var(--hit)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>탈출 속도 에너지 발사대</h1>
+    <p>역학적 에너지 E를 정하고 로켓을 발사합니다. 운동 에너지가 줄어든 만큼 중력 퍼텐셜 에너지가 늘어나고, 둘의 합 E는 끝까지 그대로입니다. E &lt; 0이면 되돌아오고, E ≥ 0이면 탈출합니다.</p>
+  </header>
+
+  <div class="card">
+    <div class="ctrl">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="elabel"><label for="sE">역학적 에너지 E (단위: GMm/R)</label><b class="mono" id="vE"></b></div>
+        <input id="sE" type="range" min="-0.95" max="0.6" step="0.01" value="-0.35">
+        <div class="row">
+          <button class="pre" data-e="-0.5">E = −0.5 (되돌아옴)</button>
+          <button class="pre" data-e="-0.15">E = −0.15</button>
+          <button class="pre" data-e="0">E = 0 (탈출 속도)</button>
+          <button class="pre" data-e="0.3">E = +0.3</button>
+        </div>
+        <div class="row">
+          <button id="launch">발사</button>
+          <button id="reset">다시 놓기</button>
+          <select id="speed" aria-label="재생 속도"><option value="1">1×</option><option value="3" selected>3×</option><option value="8">8×</option></select>
+          <label for="planet" style="color:var(--muted);font-size:.88rem;margin-left:4px">행성</label>
+          <select id="planet"></select>
+        </div>
+      </div>
+      <dl class="launchinfo mono" id="linfo"></dl>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">위: 로켓 위치 · 아래: 거리에 따른 에너지 (그림 Ⅰ-23처럼 같은 r 축)</div>
+    <div class="legend" style="margin-bottom:6px">
+      <span><i class="sw" style="background:var(--ek)"></i>운동 에너지 E<sub>k</sub> = ½mv²</span>
+      <span><i class="sw" style="background:var(--ep)"></i>중력 퍼텐셜 에너지 E<sub>p</sub> = −GMm/r</span>
+      <span><i class="sw" style="background:var(--e)"></i>역학적 에너지 E = E<sub>k</sub> + E<sub>p</sub></span>
+    </div>
+    <canvas id="main"></canvas>
+    <div id="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="label">시간에 따른 에너지 (그림 Ⅰ-10처럼)</div>
+    <canvas id="tg"></canvas>
+  </div>
+
+  <div class="grid2">
+    <div class="card sol">
+      <div class="label">공식 정리</div>
+      <h3>중력 퍼텐셜 에너지</h3>
+      <div class="eqbox f">E<sub>p</sub> = −G<span class="frac"><span>Mm</span><span>r</span></span></div>
+      <p>무한히 먼 곳(r = ∞)을 기준(0)으로 잡아서 항상 음수. (−) 부호는 중력에 묶여 있다는 뜻. 멀어질수록 0에 가까워지며 <b>증가</b>.</p>
+      <h3>역학적 에너지 보존</h3>
+      <div class="eqbox f">E = <span class="frac"><span class="n">1</span><span class="n">2</span></span>mV<sup class="n">2</sup> − G<span class="frac"><span>Mm</span><span>R</span></span> = <span class="frac"><span class="n">1</span><span class="n">2</span></span>mv<sup class="n">2</sup> − G<span class="frac"><span>Mm</span><span>r</span></span> = <span class="n">일정</span></div>
+      <h3>탈출 속도 (E = 0)</h3>
+      <div class="eqbox f"><span class="frac"><span class="n">1</span><span class="n">2</span></span>mv<sub>e</sub><sup class="n">2</sup> − G<span class="frac"><span>Mm</span><span>R</span></span> = 0 &nbsp;→&nbsp; v<sub>e</sub> = <span class="n">√</span>(<span class="frac"><span><span class="n">2</span>GM</span><span>R</span></span>)</div>
+      <p>행성 질량이 클수록, 출발점이 중심에 가까울수록 큼. <b>로켓 질량과 무관</b>(양변에 m이 약분).</p>
+      <h3>E로 미리 알 수 있는 것</h3>
+      <div class="eqbox f">E &lt; 0: r<sub>max</sub> = G<span class="frac"><span>Mm</span><span>−E</span></span>&nbsp;&nbsp;&nbsp; E ≥ 0: v<sub>∞</sub> = <span class="n">√</span>(<span class="frac"><span><span class="n">2</span>E</span><span>m</span></span>)</div>
+    </div>
+    <div class="card sol">
+      <div class="label">E의 부호로 결정되는 운동</div>
+      <div class="tw"><table class="cases">
+        <tr><th>역학적 에너지</th><th>발사 속력</th><th>운동</th></tr>
+        <tr><td>E &lt; 0</td><td>V &lt; v<sub>e</sub></td><td>E<sub>p</sub> 곡선과 E 선이 만나는 곳(E<sub>k</sub> = 0)에서 멈췄다가 되돌아옴</td></tr>
+        <tr><td>E = 0</td><td>V = v<sub>e</sub></td><td>무한히 먼 곳에서 속력이 겨우 0 → 간신히 탈출</td></tr>
+        <tr><td>E &gt; 0</td><td>V &gt; v<sub>e</sub></td><td>무한히 먼 곳에서도 E<sub>k</sub> = E만큼 남아 계속 운동</td></tr>
+      </table></div>
+      <h3 style="margin-top:14px">학생들이 자주 헷갈리는 점</h3>
+      <ul class="mis">
+        <li>E가 음수인데 운동 에너지는 양수? → <b>E<sub>p</sub>가 더 큰 음수</b>라서 합이 음수. E<sub>k</sub>는 항상 0 이상.</li>
+        <li>올라갈수록 E<sub>p</sub>의 절댓값이 작아짐 = E<sub>p</sub>가 <b>증가</b>. 그만큼 E<sub>k</sub>가 감소.</li>
+        <li>멈추는 지점은 E<sub>k</sub> = 0, 즉 <b>E = E<sub>p</sub></b>인 곳. E가 0에 가까울수록 이 지점이 급격히 멀어짐.</li>
+        <li>E ≥ 0이면 E 선이 E<sub>p</sub> 곡선과 만나지 않음 → 멈출 곳이 없음 = 탈출.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+// 단위: G = M = R = m = 1 → 에너지 단위 GMm/R, 속력 단위 √(GM/R), ve = √2
+const PLANETS=[['수성',4.3],['지구',11.2],['화성',5.0],['목성',59.5],['토성',35.5]]; // 교과서 표 Ⅰ-1
+const psel=document.getElementById('planet');
+PLANETS.forEach(([n,v],i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;if(i===1)o.selected=true;psel.appendChild(o);});
+let pv=11.2;
+const kms=v=>v/Math.SQRT2*pv;
+
+let E=-0.35, r=1, v=0, t=0, state='ready', hist=[], marks=[], speed=3, last=null, landSpeed=0;
+const V0=()=>Math.sqrt(2*(1+E));
+function reset(){r=1;v=V0();t=0;state='ready';hist=[{t:0,ek:0.5*v*v,ep:-1}];marks=[];last=null;update();}
+const acc=x=>-1/(x*x);
+function step(dt){ // RK4
+  const k1r=v,k1v=acc(r);
+  const k2r=v+0.5*dt*k1v,k2v=acc(r+0.5*dt*k1r);
+  const k3r=v+0.5*dt*k2v,k3v=acc(r+0.5*dt*k2r);
+  const k4r=v+dt*k3v,k4v=acc(r+dt*k3r);
+  r+=dt/6*(k1r+2*k2r+2*k3r+k4r);v+=dt/6*(k1v+2*k2v+2*k3v+k4v);t+=dt;
+}
+
+let C={};
+function readColors(){const s=getComputedStyle(document.documentElement);
+  for(const k of['bg','panel','ink','muted','line','soft','ek','ep','e','planet','grid','accent','hit','flame','space'])C[k]=s.getPropertyValue('--'+k).trim();}
+function fit(cv,w,h){const q=window.devicePixelRatio||1;const cw=cv.clientWidth||900;cv.width=Math.round(cw*q);cv.height=Math.round(cw*h/w*q);
+  const x=cv.getContext('2d');x.setTransform(cv.width/w,0,0,cv.height/h,0,0);return x;}
+const main=document.getElementById('main'),tg=document.getElementById('tg');let mx,tx;
+function resize(){mx=fit(main,900,520);tx=fit(tg,900,210);draw();}
+
+// layout
+const RMAX=10, X0=70, X1=690, S=(X1-X0)/RMAX; const X=rr=>X0+rr*S;
+const XINF=790; // ∞ column
+const STRIP={top:10,bot:140}, EG={top:175,bot:470,eMin:-1.15,eMax:0.85};
+const EY=e=>EG.bot-(e-EG.eMin)/(EG.eMax-EG.eMin)*(EG.bot-EG.top);
+
+function arrowV(c,x,y0,y1,col,w){c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w||6;
+  if(Math.abs(y1-y0)<3){return;}const d=Math.sign(y1-y0);
+  c.beginPath();c.moveTo(x,y0);c.lineTo(x,y1-d*8);c.stroke();
+  c.beginPath();c.moveTo(x,y1);c.lineTo(x-7,y1-d*11);c.lineTo(x+7,y1-d*11);c.closePath();c.fill();}
+
+function drawMain(){
+  const c=mx;c.clearRect(0,0,900,520);
+  // ---- strip
+  c.fillStyle=C.space;c.fillRect(X0,STRIP.top,XINF+60-X0,STRIP.bot-STRIP.top);
+  const cy=(STRIP.top+STRIP.bot)/2;
+  c.save();c.beginPath();c.rect(0,STRIP.top,900,STRIP.bot-STRIP.top);c.clip();
+  c.fillStyle=C.planet;c.beginPath();c.arc(X(0),cy,S,0,7);c.fill();
+  c.restore();
+  c.fillStyle=C.ink;c.font='700 13px "Noto Sans KR",sans-serif';c.textAlign='center';c.fillText(psel.options[psel.selectedIndex].text,X(0)+S/2-10,cy+5);
+  // equal-time marks
+  c.fillStyle=C.muted;marks.forEach(m=>{if(m<=RMAX+0.3){c.beginPath();c.arc(X(m),cy+26,2.5,0,7);c.fill();}});
+  // rocket
+  if(r<=RMAX+0.4){
+    const rx=X(r);c.save();c.translate(rx,cy);if(v<0&&state!=='ready')c.scale(-1,1);
+    c.fillStyle=C.ink;c.beginPath();c.moveTo(16,0);c.lineTo(4,-7);c.lineTo(-14,-7);c.lineTo(-14,7);c.lineTo(4,7);c.closePath();c.fill();
+    if(state==='fly'){c.fillStyle=C.flame;c.beginPath();c.moveTo(-14,-5);c.lineTo(-24-Math.random()*6,0);c.lineTo(-14,5);c.closePath();c.fill();}
+    c.restore();
+    // velocity arrow
+    if(Math.abs(v)>0.01&&state!=='land'){const L=v*45;c.strokeStyle=C.accent;c.fillStyle=C.accent;c.lineWidth=3;const y=cy-24;
+      c.beginPath();c.moveTo(rx,y);c.lineTo(rx+L-Math.sign(L)*8,y);c.stroke();c.beginPath();c.moveTo(rx+L,y);c.lineTo(rx+L-Math.sign(L)*11,y-6);c.lineTo(rx+L-Math.sign(L)*11,y+6);c.closePath();c.fill();}
+  } else {
+    c.fillStyle=C.hit;c.font='700 14px "Noto Sans KR",sans-serif';c.textAlign='center';c.fillText('→ 화면 밖으로 탈출 중',X(RMAX)-60,cy-24);
+  }
+  c.fillStyle=C.muted;c.font='12px "Noto Sans KR",sans-serif';c.textAlign='center';c.fillText('r = ∞',XINF,cy+5);
+  c.save();c.setLineDash([4,4]);c.strokeStyle=C.line;c.beginPath();c.moveTo(X(RMAX)+20,cy);c.lineTo(XINF-24,cy);c.stroke();c.restore();
+
+  // ---- energy diagram
+  c.font='11px "JetBrains Mono",monospace';
+  for(let e=-1;e<=0.8;e+=0.2){const y=EY(+e.toFixed(1));c.strokeStyle=Math.abs(e)<1e-6?C.muted:C.grid;c.lineWidth=Math.abs(e)<1e-6?1.4:1;
+    c.beginPath();c.moveTo(X0,y);c.lineTo(XINF+40,y);c.stroke();
+    if(Math.round(e*10)%2===0){c.fillStyle=C.muted;c.textAlign='right';c.fillText((e>0.001?'+':'')+(+e.toFixed(1)),X0-8,y+4);}}
+  c.textAlign='left';c.fillStyle=C.muted;c.font='12px "Noto Sans KR",sans-serif';c.fillText('에너지 (GMm/R)',X0+4,EG.top-6);
+  for(let k=0;k<=RMAX;k+=1){c.fillStyle=C.muted;c.font='11px "JetBrains Mono",monospace';c.textAlign='center';c.fillText(k===0?'0':k===1?'R':k+'R',X(k),EG.bot+16);
+    c.strokeStyle=C.grid;c.beginPath();c.moveTo(X(k),EG.top);c.lineTo(X(k),EG.bot);c.stroke();}
+  c.fillStyle=C.muted;c.font='12px "Noto Sans KR",sans-serif';c.textAlign='right';c.fillText('행성 중심으로부터 거리 r',X(RMAX),EG.bot+34);
+  // planet interior shade
+  c.fillStyle=C.soft;c.fillRect(X0,EG.top,S,EG.bot-EG.top);
+  c.fillStyle=C.muted;c.textAlign='center';c.fillText('행성',X(0.5),EG.top+16);c.fillText('내부',X(0.5),EG.top+32);
+  // Ep curve
+  c.strokeStyle=C.ep;c.lineWidth=2.5;c.beginPath();for(let q=0;q<=300;q++){const rr=1+(RMAX-1)*q/300;const y=EY(-1/rr);q?c.lineTo(X(rr),y):c.moveTo(X(rr),y);}c.stroke();
+  c.fillStyle=C.ink;c.font='600 12px "Noto Sans KR",sans-serif';c.textAlign='left';c.fillStyle=C.ep;c.fillText('Eₚ = −GMm/r',X(5.6),EY(-1/5.6)-10);
+  c.fillStyle=C.ink;c.textAlign='right';c.fillText('−GMm/R',X(1)-4,EY(-1)+4);c.textAlign='left';
+  // dashed connection to infinity
+  c.save();c.setLineDash([3,5]);c.strokeStyle=C.ep;c.lineWidth=1.5;c.beginPath();c.moveTo(X(RMAX),EY(-1/RMAX));c.lineTo(XINF,EY(0));c.stroke();c.restore();
+  // E line
+  c.strokeStyle=C.e;c.lineWidth=2.5;c.beginPath();c.moveTo(X(1),EY(E));c.lineTo(XINF+40,EY(E));c.stroke();
+  c.fillStyle=C.ink;c.textAlign='right';c.fillText('E = '+(E>0?'+':'')+E.toFixed(2),XINF+40,EY(E)-6);
+  // turning point
+  if(E<0){const rt=-1/E;if(rt<=RMAX){c.strokeStyle=C.hit;c.lineWidth=2;c.fillStyle=C.panel;c.beginPath();c.arc(X(rt),EY(E),6,0,7);c.fill();c.stroke();
+    c.save();c.setLineDash([3,4]);c.strokeStyle=C.hit;c.lineWidth=1;c.beginPath();c.moveTo(X(rt),EY(E));c.lineTo(X(rt),EG.bot);c.stroke();c.restore();
+    c.fillStyle=C.hit;c.font='600 12px "Noto Sans KR",sans-serif';c.textAlign='center';c.fillText('Eₖ = 0 (최고점)',X(rt)+52,EY(E)+20);}
+    else{c.fillStyle=C.hit;c.font='600 12px "Noto Sans KR",sans-serif';c.textAlign='right';c.fillText(`최고점 r = ${rt.toFixed(1)}R (화면 밖)`,X(RMAX),EY(E)+18);}}
+  // infinity column
+  c.fillStyle=C.muted;c.font='600 12px "Noto Sans KR",sans-serif';c.textAlign='center';c.fillText('r = ∞',XINF,EG.bot+16);
+  c.strokeStyle=C.line;c.beginPath();c.moveTo(XINF,EG.top);c.lineTo(XINF,EG.bot);c.stroke();
+  if(E>=0){arrowV(c,XINF,EY(0),EY(E),C.ek,6);c.fillStyle=C.ek;c.textAlign='left';c.fillText('남는 Eₖ = E',XINF+10,(EY(0)+EY(E))/2+4);}
+  else{c.fillStyle=C.muted;c.textAlign='center';c.font='12px "Noto Sans KR",sans-serif';c.fillText('도달 불가',XINF,EY(0)+18);}
+  // current bars at rocket position
+  const rr=Math.min(r,RMAX), ep=-1/r, ek=0.5*v*v;
+  if(r<=RMAX){
+    const x=X(rr);
+    arrowV(c,x-5,EY(0),EY(ep),C.ep,7);
+    arrowV(c,x+5,EY(ep),EY(ep+ek),C.ek,7);
+    c.fillStyle=C.ep;c.font='700 12px "Noto Sans KR",sans-serif';c.textAlign='right';c.fillText('Eₚ',x-12,(EY(0)+EY(ep))/2+4);
+    if(ek>0.02){c.fillStyle=C.ek;c.textAlign='left';c.fillText('Eₖ',x+14,(EY(ep)+EY(ep+ek))/2+4);}
+    c.save();c.setLineDash([2,3]);c.strokeStyle=C.muted;c.lineWidth=1;c.beginPath();c.moveTo(x,STRIP.bot);c.lineTo(x,EG.top);c.stroke();c.restore();
+  }
+}
+
+function drawTG(){
+  const c=tx;c.clearRect(0,0,900,210);
+  const x0=70,x1=870,yT=18,yB=180,eMin=-1.1,eMax=Math.max(0.8,0.5*V0()**2+0.05);
+  const tMax=Math.max(8,(hist.length?hist[hist.length-1].t:0)*1.1);
+  const Xt=q=>x0+q/tMax*(x1-x0),Ye=e=>yB-(e-eMin)/(eMax-eMin)*(yB-yT);
+  c.font='11px "JetBrains Mono",monospace';
+  for(const e of [-1,-0.5,0,0.5]){if(e>eMax)continue;c.strokeStyle=e===0?C.muted:C.grid;c.lineWidth=e===0?1.3:1;c.beginPath();c.moveTo(x0,Ye(e));c.lineTo(x1,Ye(e));c.stroke();
+    c.fillStyle=C.muted;c.textAlign='right';c.fillText((e>0?'+':'')+e,x0-8,Ye(e)+4);}
+  c.fillStyle=C.muted;c.font='12px "Noto Sans KR",sans-serif';c.textAlign='right';c.fillText('시간',x1,yB+18);
+  const line=(f,col)=>{c.strokeStyle=col;c.lineWidth=2.5;c.beginPath();hist.forEach((h,i)=>{const y=Ye(f(h));i?c.lineTo(Xt(h.t),y):c.moveTo(Xt(h.t),y);});c.stroke();};
+  if(hist.length>1){line(h=>h.ek,C.ek);line(h=>h.ep,C.ep);line(h=>h.ek+h.ep,C.e);}
+  const h=hist[hist.length-1];
+  if(h){c.font='600 12px "Noto Sans KR",sans-serif';c.textAlign='left';
+    const lx=Math.min(Xt(h.t)+8,x1-70);
+    c.fillStyle=C.ink;c.fillText('Eₖ',lx,Ye(h.ek)+4);c.fillText('Eₚ',lx,Ye(h.ep)+16);c.fillText('E (일정)',lx,Ye(h.ek+h.ep)-6);}
+}
+
+const linfo=document.getElementById('linfo'),status=document.getElementById('status');
+function panel(){
+  document.getElementById('vE').textContent=(E>0?'+':'')+E.toFixed(2);
+  const V=V0();
+  const ek=0.5*v*v,ep=-1/r;
+  linfo.innerHTML=`
+   <dt>발사 속력 V</dt><dd>${kms(V).toFixed(2)} km/s (${(V/Math.SQRT2).toFixed(2)} vₑ)</dd>
+   <dt>${psel.options[psel.selectedIndex].text} 탈출 속도 vₑ</dt><dd>${pv.toFixed(1)} km/s</dd>
+   <dt>현재 거리 r</dt><dd>${r>99?'≫ 10R':r.toFixed(2)+' R'}</dd>
+   <dt>현재 속력 v</dt><dd>${kms(Math.abs(v)).toFixed(2)} km/s ${state==='fly'?(v>=0?'(멀어짐)':'(돌아옴)'):''}</dd>
+   <dt>Eₖ + Eₚ</dt><dd>${ek.toFixed(3)} + (${ep.toFixed(3)}) = <b style="color:var(--e)">${(ek+ep).toFixed(3)}</b></dd>`;
+  let s;
+  if(state==='ready'){
+    s=E<0?`E = ${E.toFixed(2)} &lt; 0 → 발사 속력이 탈출 속도보다 작음. 예상 최고점 r = GMm/(−E) = <b>${(-1/E).toFixed(2)}R</b>. 발사를 눌러 확인하세요.`
+      :E===0?'E = 0 → 발사 속력 = 탈출 속도. 무한히 먼 곳에서 속력이 0이 됩니다.'
+      :`E = +${E.toFixed(2)} &gt; 0 → 탈출. 무한히 먼 곳에서도 Eₖ = ${E.toFixed(2)}가 남아 속력 <b>${kms(Math.sqrt(2*E)).toFixed(2)} km/s</b>로 계속 운동.`;
+  }else if(state==='fly'){
+    s=v>=0?'올라가는 중: Eₚ가 증가(0에 가까워짐)한 만큼 Eₖ가 감소. 아래 그래프에서 파란 E 선은 그대로입니다. 점 간격이 좁아지는 것 = 느려짐.'
+      :'되돌아오는 중: Eₚ가 감소한 만큼 Eₖ가 증가. 합 E는 그대로.';
+    if(E<0&&Math.abs(v)<0.03)s='<b>최고점</b>: Eₖ = 0, Eₚ = E. 에너지 그래프에서 E 선과 Eₚ 곡선이 만나는 곳.';
+  }else if(state==='land'){
+    s=`착지: 발사할 때와 같은 속력 <b>${kms(landSpeed).toFixed(2)} km/s</b>로 돌아옴 (같은 위치 → 같은 Eₚ → 같은 Eₖ).`;
+  }else{
+    s=E>0?`탈출: r이 커질수록 Eₚ → 0, Eₖ → E = ${E.toFixed(2)}. 무한히 먼 곳 속력 ${kms(Math.sqrt(2*E)).toFixed(2)} km/s.`
+      :'탈출 (E = 0): 멀어질수록 Eₖ와 Eₚ가 모두 0에 가까워집니다. 속력이 계속 줄지만 0이 되는 지점이 없습니다.';
+  }
+  status.innerHTML=s;
+  document.getElementById('launch').disabled=state!=='ready';
+  document.querySelectorAll('.pre').forEach(b=>b.classList.toggle('on',Math.abs(+b.dataset.e-E)<0.001));
+}
+function update(){readColors();drawMain();drawTG();panel();}
+
+let markT=0;
+function frame(ts){
+  if(state==='fly'){
+    if(last!=null){
+      let simdt=Math.min(0.05,(ts-last)/1000)*speed*0.6;const n=Math.ceil(simdt/0.002);const dt=simdt/n;
+      for(let i=0;i<n;i++){step(dt);
+        if(t-markT>=0.6){markT=t;marks.push(r);}
+        if(r<=1&&v<0){landSpeed=Math.abs(v);r=1;v=0;state='land';break;}
+        if(r>200){state='escaped';break;}}
+      hist.push({t,ek:0.5*v*v,ep:-1/r});
+      if(state==='fly'&&E>=0&&r>RMAX+1&&t>60)state='escaped';
+      update();
+    }
+    last=ts;
+  }else last=null;
+  requestAnimationFrame(frame);
+}
+document.getElementById('launch').onclick=()=>{if(state!=='ready')return;state='fly';markT=0;marks=[1];last=null;};
+document.getElementById('reset').onclick=reset;
+document.getElementById('speed').onchange=e=>speed=+e.target.value;
+const sE=document.getElementById('sE');
+sE.oninput=()=>{E=+sE.value;reset();};
+document.querySelectorAll('.pre').forEach(b=>b.onclick=()=>{E=+b.dataset.e;sE.value=E;reset();});
+psel.onchange=()=>{pv=PLANETS[+psel.value][1];update();};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+new MutationObserver(update).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+window.addEventListener('resize',resize);
+const draw=update;
+resize();reset();
+document.fonts&&document.fonts.ready.then(update);
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
